@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Invisible Hand of Physics</title>
+  <meta name="description" content="Intuitive physics is not unique to V-JEPA-style encoders. Probing video diffusion models along reverse-sampled trajectories of real videos, we find physical plausibility linearly decodable from their hidden states, on par with or better than V-JEPA 2 and VideoMAE, and absent from the VAE latents. NeurIPS 2026 Spotlight.">
+  <meta name="author" content="Parsa Esmati, Somjit Nath, Katja Hofmann, Derek Nowrouzezahrai, Samira Ebrahimi Kahou, Majid Mirmehdi">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="The Invisible Hand of Physics: When Video Diffusion Models Know More Than They Show">
+  <meta property="og:description" content="Video diffusion models encode intuitive physics too, not just V-JEPA-style encoders. NeurIPS 2026 Spotlight.">
+  <meta property="og:image" content="static/images/social.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="The Invisible Hand of Physics">
+  <meta name="twitter:description" content="Video diffusion models encode intuitive physics too, not just V-JEPA-style encoders. NeurIPS 2026 Spotlight.">
+  <meta name="twitter:image" content="static/images/social.jpg">
+
+  <link rel="icon" type="image/svg+xml" href="static/images/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <link rel="stylesheet" href="static/css/style.css">
+
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+  <script defer src="static/js/main.js"></script>
+</head>
+<body>
+
+<!-- ───────────────────────── Sticky navigation ───────────────────────── -->
+<nav class="topnav" aria-label="Sections">
+  <div class="topnav-inner">
+    <a class="topnav-title" href="#top">The Invisible Hand of Physics</a>
+    <div class="topnav-links">
+      <a href="#tasks">Tasks</a>
+      <a href="#method">Method</a>
+      <a href="#results">Results</a>
+      <a href="#bibtex">BibTeX</a>
+    </div>
+    <div class="topnav-actions">
+      <a class="chip-link" href="https://arxiv.org/abs/2606.05328">arXiv</a>
+      <a class="chip-link" href="https://github.com/ParsaEsmati/videodiffusionphysics">Code</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ───────────────────────── Hero ───────────────────────── -->
+<header class="hero" id="top">
+  <div class="container narrow">
+    <p class="venue">
+      <svg aria-hidden="true" viewBox="0 0 24 24" width="15" height="15"><path fill="currentColor" d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.5L12 17.2l-5.9 3.3 1.3-6.5-4.9-4.6 6.6-.8z"/></svg>
+      NeurIPS 2026 &middot; Spotlight
+    </p>
+    <h1>The Invisible Hand of Physics</h1>
+    <p class="subtitle">When Video Diffusion Models Know More Than They Show</p>
+
+    <ul class="authors">
+      <li>Parsa Esmati<sup>1*</sup></li>
+      <li>Somjit Nath<sup>2,3*</sup></li>
+      <li>Katja Hofmann<sup>4</sup></li>
+      <li>Derek Nowrouzezahrai<sup>2,3</sup></li>
+      <li>Samira Ebrahimi Kahou<sup>3,5&dagger;</sup></li>
+      <li>Majid Mirmehdi<sup>1&dagger;</sup></li>
+    </ul>
+    <ul class="affiliations">
+      <li><sup>1</sup>University of Bristol</li>
+      <li><sup>2</sup>McGill University</li>
+      <li><sup>3</sup>Mila &ndash; Quebec AI Institute</li>
+      <li><sup>4</sup>Microsoft Research</li>
+      <li><sup>5</sup>University of Calgary</li>
+    </ul>
+    <p class="contrib-note"><sup>*</sup>Equal contribution &nbsp;&middot;&nbsp; <sup>&dagger;</sup>Equal supervision</p>
+
+    <div class="buttons">
+      <a class="btn" href="https://arxiv.org/pdf/2606.05328">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>
+        Paper
+      </a>
+      <a class="btn" href="https://arxiv.org/abs/2606.05328">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 4l16 16M20 4L4 20"/></svg>
+        arXiv
+      </a>
+      <a class="btn" href="https://github.com/ParsaEsmati/videodiffusionphysics">
+        <svg aria-hidden="true" viewBox="0 0 16 16" class="fill"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        Code
+      </a>
+      <a class="btn btn-ghost" href="#bibtex">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 7h4v4H8v3a2 2 0 0 1-2 2M14 7h4v4h-3v3a2 2 0 0 1-2 2"/></svg>
+        BibTeX
+      </a>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- ───────────────────────── Teaser ───────────────────────── -->
+<section class="section teaser" aria-label="Overview">
+  <div class="container">
+    <p class="tldr">
+      Intuitive physics is not unique to self-supervised encoders like V-JEPA. <strong>Video diffusion models, trained only to generate, encode it too:</strong> whether a real video is physically plausible can be read linearly from their hidden states, on par with or better than V-JEPA&nbsp;2 and VideoMAE. The signal is absent from the VAE latents the models operate on and emerges inside the denoising transformer.
+    </p>
+    <figure class="figure figure-hero">
+      <a class="figure-frame" href="static/images/overview.jpg">
+        <img src="static/images/overview.jpg" width="2000" height="807" alt="Diagram. Forward sampling integrates dZ/dt = v(Z, t) from noise to a clean video. Reverse sampling integrates the negated velocity from the clean video back to noise; the velocity network's internal states along this path feed a probe that outputs plausible or implausible.">
+      </a>
+      <figcaption><b>Reverse sampling and probing.</b> We encode a real video and integrate the model's learned velocity field backwards, from the clean latent to noise. The transformer's activations at every block and noise level along this path are probed for physical plausibility.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ───────────────────────── Abstract ───────────────────────── -->
+<section class="section" id="abstract">
+  <div class="container narrow">
+    <h2>Abstract</h2>
+    <p class="abstract">
+      Modern video diffusion models generate increasingly realistic and temporally coherent videos, motivating their use as candidate world simulators. Yet it remains unclear whether these models internally encode physical structure, or merely reproduce motion patterns seen during training. We study this question by probing video diffusion models along latent trajectories corresponding to real videos with known physical plausibility. To obtain such trajectories, we approximately invert the deterministic sampling process by integrating the learned velocity field backward from a clean video latent to noise, giving access to the model's intermediate states and attention maps. Using these recovered trajectories, we show that physical plausibility is linearly decodable from diffusion transformer states across IntPhys and InfLevel, reaching around 81.27% average accuracy and outperforming dedicated representation-learning baselines such as V-JEPA and VideoMAE. Surprisingly, this signal is absent from the VAE latent input and emerges inside the denoising transformer itself, despite the model not being trained with a self-supervised predictive objective. These findings suggest that physically meaningful representations can arise as a byproduct of generative denoising.
+    </p>
+  </div>
+</section>
+
+<!-- ───────────────────────── Tasks ───────────────────────── -->
+<section class="section section-alt" id="tasks">
+  <div class="container">
+    <div class="section-head narrow-text">
+      <p class="eyebrow">The tasks</p>
+      <h2>What the probe has to tell apart</h2>
+      <p>IntPhys and InfLevel follow the <em>violation-of-expectation</em> paradigm from infant cognition research. Every implausible clip is matched with a plausible one that shares its setup, and the probe must label each clip on its own, without seeing its partner. PhyWorld asks for numbers instead of a label.</p>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Benchmarks">
+      <button class="tab" role="tab" id="tab-intphys" aria-controls="panel-intphys" aria-selected="true">IntPhys</button>
+      <button class="tab" role="tab" id="tab-inflevel" aria-controls="panel-inflevel" aria-selected="false" tabindex="-1">InfLevel-Lab</button>
+      <button class="tab" role="tab" id="tab-phyworld" aria-controls="panel-phyworld" aria-selected="false" tabindex="-1">PhyWorld</button>
+    </div>
+
+    <!-- IntPhys -->
+    <div class="panel" role="tabpanel" id="panel-intphys" aria-labelledby="tab-intphys">
+      <p class="panel-lead">Rendered scenes from the IntPhys development set <span class="cite">(Riochet et al., 2018)</span>. Many violations in the benchmark happen behind an occluder and cannot be spotted from local motion; the examples below happen in view so they are easy to see.</p>
+
+      <div class="task-row">
+        <div class="task-head"><div class="task-desc">
+          <h3>Object permanence</h3>
+          <p>Objects do not vanish or appear from nothing.</p></div>
+        </div>
+        <div class="pairs pairs-2">
+          <div class="pair">
+            <div class="pair-clips">
+              <figure class="clip"><div class="media sq"><video muted loop playsinline preload="none" poster="static/videos/intphys/O1_19_P.jpg" data-src="static/videos/intphys/O1_19_P.mp4" aria-label="Plausible: the object keeps moving across the scene"></video><span class="tag ok">Plausible</span></div></figure>
+              <figure class="clip"><div class="media sq"><video muted loop playsinline preload="none" poster="static/videos/intphys/O1_19_I.jpg" data-src="static/videos/intphys/O1_19_I.mp4" aria-label="Implausible: the object vanishes in plain view"></video><span class="tag bad">Implausible</span></div></figure>
+            </div>
+            <div class="pair-foot"><p>The object vanishes in plain view.</p><button class="replay" type="button">Replay</button></div>
+          </div>
+          <div class="pair">
+            <div class="pair-clips">
+              <figure class="clip"><div class="media sq"><video muted loop playsinline preload="none" poster="static/videos/intphys/O1_12_P.jpg" data-src="static/videos/intphys/O1_12_P.mp4" aria-label="Plausible: the cone enters from the edge of the frame"></video><span class="tag ok">Plausible</span></div></figure>
+              <figure class="clip"><div class="media sq"><video muted loop playsinline preload="none" poster="static/videos/intphys/O1_12_I.jpg" data-src="static/videos/intphys/O1_12_I.mp4" aria-label="Implausible: the cone appears out of nowhere in mid-air"></video><span class="tag bad">Implausible</span></div></figure>
+            </div>
+            <div class="pair-foot"><p>A cone appears out of nowhere in mid-air.</p><button class="replay" type="button">Replay</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="task-row">
+        <div class="task-head"><div class="task-desc">
+          <h3>Shape constancy</h3>
+          <p>Objects keep their shape.</p></div>
+        </div>
+        <div class="pairs pairs-2">
+          <div class="pair">
+            <div class="pair-clips">
+              <figure class="clip"><div class="media sq"><video muted loop playsinline preload="none" poster="static/videos/intphys/O2_22_P.jpg" data-src="static/videos/intphys/O2_22_P.mp4" aria-label="Plausible: a cone flies through the scene"></video><span class="tag ok">Plausible</span></div></figure>
+              <figure class="clip"><div class="media sq"><video muted loop playsinline preload="none" poster="static/videos/intphys/O2_22_I.jpg" data-src="static/videos/intphys/O2_22_I.mp4" aria-label="Implausible: a cube turns into a cone in mid-air"></video><span class="tag bad">Implausible</span></div></figure>
+            </div>
+            <div class="pair-foot"><p>A cube turns into a cone in mid-air.</p><button class="replay" type="button">Replay</button></div>
+          </div>
+          <div class="pair">
+            <div class="pair-clips">
+              <figure class="clip"><div class="media sq"><video muted loop playsinline preload="none" poster="static/videos/intphys/O2_16_P.jpg" data-src="static/videos/intphys/O2_16_P.mp4" aria-label="Plausible: two cubes fly through the scene"></video><span class="tag ok">Plausible</span></div></figure>
+              <figure class="clip"><div class="media sq"><video muted loop playsinline preload="none" poster="static/videos/intphys/O2_16_I.jpg" data-src="static/videos/intphys/O2_16_I.mp4" aria-label="Implausible: objects switch between a sphere and a cube in flight"></video><span class="tag bad">Implausible</span></div></figure>
+            </div>
+            <div class="pair-foot"><p>Objects switch between a sphere and a cube in flight.</p><button class="replay" type="button">Replay</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="task-row">
+        <div class="task-head"><div class="task-desc">
+          <h3>Spatio-temporal continuity</h3>
+          <p>Objects move along continuous paths.</p></div>
+        </div>
+        <div class="pairs pairs-2">
+          <div class="pair">
+            <div class="pair-clips">
+              <figure class="clip"><div class="media sq"><video muted loop playsinline preload="none" poster="static/videos/intphys/O3_28_P.jpg" data-src="static/videos/intphys/O3_28_P.mp4" aria-label="Plausible: the ball follows a smooth arc"></video><span class="tag ok">Plausible</span></div></figure>
+              <figure class="clip"><div class="media sq"><video muted loop playsinline preload="none" poster="static/videos/intphys/O3_28_I.jpg" data-src="static/videos/intphys/O3_28_I.mp4" aria-label="Implausible: the ball jumps partway along its flight"></video><span class="tag bad">Implausible</span></div></figure>
+            </div>
+            <div class="pair-foot"><p>The ball jumps partway along its flight.</p><button class="replay" type="button">Replay</button></div>
+          </div>
+          <div class="pair">
+            <div class="pair-clips">
+              <figure class="clip"><div class="media sq"><video muted loop playsinline preload="none" poster="static/videos/intphys/O3_24_P.jpg" data-src="static/videos/intphys/O3_24_P.mp4" aria-label="Plausible: the ball passes behind two screens along one path"></video><span class="tag ok">Plausible</span></div></figure>
+              <figure class="clip"><div class="media sq"><video muted loop playsinline preload="none" poster="static/videos/intphys/O3_24_I.jpg" data-src="static/videos/intphys/O3_24_I.mp4" aria-label="Implausible: the ball's path between the two screens is broken"></video><span class="tag bad">Implausible</span></div></figure>
+            </div>
+            <div class="pair-foot"><p>The ball's path between the two screens is broken.</p><button class="replay" type="button">Replay</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- InfLevel -->
+    <div class="panel" role="tabpanel" id="panel-inflevel" aria-labelledby="tab-inflevel" hidden>
+      <p class="panel-lead">Real recordings of a person handling everyday objects, designed after infant experiments <span class="cite">(Weihs et al., 2022)</span>. Violations unfold over long clips, often under partial occlusion, and require tracking objects through time rather than reading local motion.</p>
+
+      <div class="task-row" data-examples>
+        <div class="task-head"><div class="task-desc">
+          <h3>Gravity</h3>
+          <p>A toy is dropped into a container. In the implausible clip, where the toy ends up contradicts the container shown at the start.</p></div>
+          <div class="example-switch" role="group" aria-label="Gravity examples">
+            <button type="button" aria-pressed="true">Example 1</button><button type="button" aria-pressed="false">Example 2</button>
+          </div>
+        </div>
+        <div class="pairs pairs-1">
+          <div class="pair">
+            <div class="pair-clips">
+              <figure class="clip"><div class="media wide"><video muted loop playsinline preload="none" poster="static/videos/inflevel/gravity_a_P.jpg" data-src="static/videos/inflevel/gravity_a_P.mp4" aria-label="Gravity, plausible outcome"></video><span class="tag ok">Plausible</span></div></figure>
+              <figure class="clip"><div class="media wide"><video muted loop playsinline preload="none" poster="static/videos/inflevel/gravity_a_I.jpg" data-src="static/videos/inflevel/gravity_a_I.mp4" aria-label="Gravity, implausible outcome"></video><span class="tag bad">Implausible</span></div></figure>
+            </div>
+            <div class="pair-foot"><p>Blue cup and ball. Watch the table once the ball is dropped in.</p><button class="replay" type="button">Replay</button></div>
+          </div>
+          <div class="pair" hidden>
+            <div class="pair-clips">
+              <figure class="clip"><div class="media wide"><video muted loop playsinline preload="none" poster="static/videos/inflevel/gravity_b_P.jpg" data-src="static/videos/inflevel/gravity_b_P.mp4" aria-label="Gravity, plausible outcome"></video><span class="tag ok">Plausible</span></div></figure>
+              <figure class="clip"><div class="media wide"><video muted loop playsinline preload="none" poster="static/videos/inflevel/gravity_b_I.jpg" data-src="static/videos/inflevel/gravity_b_I.mp4" aria-label="Gravity, implausible outcome"></video><span class="tag bad">Implausible</span></div></figure>
+            </div>
+            <div class="pair-foot"><p>Orange bowl and duck. Watch the table once the duck is dropped in.</p><button class="replay" type="button">Replay</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="task-row" data-examples>
+        <div class="task-head"><div class="task-desc">
+          <h3>Solidity</h3>
+          <p>A container is placed over a small toy. The implausible outcome is only possible if solid objects pass through one another.</p></div>
+          <div class="example-switch" role="group" aria-label="Solidity examples">
+            <button type="button" aria-pressed="true">Example 1</button><button type="button" aria-pressed="false">Example 2</button>
+          </div>
+        </div>
+        <div class="pairs pairs-1">
+          <div class="pair">
+            <div class="pair-clips">
+              <figure class="clip"><div class="media wide"><video muted loop playsinline preload="none" poster="static/videos/inflevel/solidity_a_P.jpg" data-src="static/videos/inflevel/solidity_a_P.mp4" aria-label="Solidity, plausible outcome"></video><span class="tag ok">Plausible</span></div></figure>
+              <figure class="clip"><div class="media wide"><video muted loop playsinline preload="none" poster="static/videos/inflevel/solidity_a_I.jpg" data-src="static/videos/inflevel/solidity_a_I.mp4" aria-label="Solidity, implausible outcome"></video><span class="tag bad">Implausible</span></div></figure>
+            </div>
+            <div class="pair-foot"><p>Grey cup and blue toy.</p><button class="replay" type="button">Replay</button></div>
+          </div>
+          <div class="pair" hidden>
+            <div class="pair-clips">
+              <figure class="clip"><div class="media wide"><video muted loop playsinline preload="none" poster="static/videos/inflevel/solidity_b_P.jpg" data-src="static/videos/inflevel/solidity_b_P.mp4" aria-label="Solidity, plausible outcome"></video><span class="tag ok">Plausible</span></div></figure>
+              <figure class="clip"><div class="media wide"><video muted loop playsinline preload="none" poster="static/videos/inflevel/solidity_b_I.jpg" data-src="static/videos/inflevel/solidity_b_I.mp4" aria-label="Solidity, implausible outcome"></video><span class="tag bad">Implausible</span></div></figure>
+            </div>
+            <div class="pair-foot"><p>Pot and apple.</p><button class="replay" type="button">Replay</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="task-row" data-examples>
+        <div class="task-head"><div class="task-desc">
+          <h3>Continuity</h3>
+          <p>A cup slides across the table. In the implausible clip, a toy vanishes, or appears from nowhere, when the cup is lifted.</p></div>
+          <div class="example-switch" role="group" aria-label="Continuity examples">
+            <button type="button" aria-pressed="true">Example 1</button><button type="button" aria-pressed="false">Example 2</button>
+          </div>
+        </div>
+        <div class="pairs pairs-1">
+          <div class="pair">
+            <div class="pair-clips">
+              <figure class="clip"><div class="media wide"><video muted loop playsinline preload="none" poster="static/videos/inflevel/continuity_a_P.jpg" data-src="static/videos/inflevel/continuity_a_P.mp4" aria-label="Continuity, plausible: the toy is still there when the cup is lifted"></video><span class="tag ok">Plausible</span></div></figure>
+              <figure class="clip"><div class="media wide"><video muted loop playsinline preload="none" poster="static/videos/inflevel/continuity_a_I.jpg" data-src="static/videos/inflevel/continuity_a_I.mp4" aria-label="Continuity, implausible: the toy has vanished when the cup is lifted"></video><span class="tag bad">Implausible</span></div></figure>
+            </div>
+            <div class="pair-foot"><p>Dark-blue cup, left to right. The toy is gone at the end.</p><button class="replay" type="button">Replay</button></div>
+          </div>
+          <div class="pair" hidden>
+            <div class="pair-clips">
+              <figure class="clip"><div class="media wide"><video muted loop playsinline preload="none" poster="static/videos/inflevel/continuity_b_P.jpg" data-src="static/videos/inflevel/continuity_b_P.mp4" aria-label="Continuity, plausible: nothing is under the cup"></video><span class="tag ok">Plausible</span></div></figure>
+              <figure class="clip"><div class="media wide"><video muted loop playsinline preload="none" poster="static/videos/inflevel/continuity_b_I.jpg" data-src="static/videos/inflevel/continuity_b_I.mp4" aria-label="Continuity, implausible: a duck appears from under the cup"></video><span class="tag bad">Implausible</span></div></figure>
+            </div>
+            <div class="pair-foot"><p>Pink cup, right to left. A duck appears from nowhere.</p><button class="replay" type="button">Replay</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PhyWorld -->
+    <div class="panel" role="tabpanel" id="panel-phyworld" aria-labelledby="tab-phyworld" hidden>
+      <p class="panel-lead">Clips from a deterministic 2D physics simulator <span class="cite">(Kang et al., 2025)</span>. A ball is launched from a known initial position \(x_0\) with a known initial velocity \(v_0\). Instead of a plausibility label, a linear regressor on a single transformer block must recover both numbers.</p>
+      <div class="phy-grid">
+        <figure class="clip phy"><div class="media sq light"><video muted loop playsinline preload="none" poster="static/videos/phyworld/parabola_0320.jpg" data-src="static/videos/phyworld/parabola_0320.mp4" aria-label="Parabola, x0 0.51 m, v0 0.59 m/s"></video></div><figcaption>\(x_0 = 0.51\) m &nbsp;&middot;&nbsp; \(v_0 = 0.59\) m/s</figcaption></figure>
+        <figure class="clip phy"><div class="media sq light"><video muted loop playsinline preload="none" poster="static/videos/phyworld/parabola_0448.jpg" data-src="static/videos/phyworld/parabola_0448.mp4" aria-label="Parabola, x0 1.79 m, v0 1.40 m/s"></video></div><figcaption>\(x_0 = 1.79\) m &nbsp;&middot;&nbsp; \(v_0 = 1.40\) m/s</figcaption></figure>
+        <figure class="clip phy"><div class="media sq light"><video muted loop playsinline preload="none" poster="static/videos/phyworld/parabola_0023.jpg" data-src="static/videos/phyworld/parabola_0023.mp4" aria-label="Parabola, x0 0.70 m, v0 2.80 m/s"></video></div><figcaption>\(x_0 = 0.70\) m &nbsp;&middot;&nbsp; \(v_0 = 2.80\) m/s</figcaption></figure>
+        <figure class="clip phy"><div class="media sq light"><video muted loop playsinline preload="none" poster="static/videos/phyworld/parabola_0497.jpg" data-src="static/videos/phyworld/parabola_0497.mp4" aria-label="Parabola, x0 1.50 m, v0 3.80 m/s"></video></div><figcaption>\(x_0 = 1.50\) m &nbsp;&middot;&nbsp; \(v_0 = 3.80\) m/s</figcaption></figure>
+        <figure class="clip phy"><div class="media sq light"><video muted loop playsinline preload="none" poster="static/videos/phyworld/parabola_0563.jpg" data-src="static/videos/phyworld/parabola_0563.mp4" aria-label="Parabola, x0 0.78 m, v0 5.00 m/s"></video></div><figcaption>\(x_0 = 0.78\) m &nbsp;&middot;&nbsp; \(v_0 = 5.00\) m/s</figcaption></figure>
+        <figure class="clip phy"><div class="media sq light"><video muted loop playsinline preload="none" poster="static/videos/phyworld/parabola_0626.jpg" data-src="static/videos/phyworld/parabola_0626.mp4" aria-label="Parabola, x0 1.17 m, v0 6.00 m/s"></video></div><figcaption>\(x_0 = 1.17\) m &nbsp;&middot;&nbsp; \(v_0 = 6.00\) m/s</figcaption></figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────────────────── Method ───────────────────────── -->
+<section class="section" id="method">
+  <div class="container">
+    <div class="section-head narrow-text">
+      <p class="eyebrow">Method</p>
+      <h2>Getting inside the model on real videos</h2>
+      <p>A flow-based video model generates by integrating a learned velocity field, \(\tfrac{d\mathbf{Z}_t}{dt} = v_\theta(\mathbf{Z}_t, t)\), from noise at \(t=0\) to a clean latent at \(t=1\). A real video has no such trajectory, so the model's internal states for it are never computed. We recover one by running the sampler in reverse.</p>
+    </div>
+
+    <ol class="steps">
+      <li class="step">
+        <span class="step-num">1</span>
+        <h3>Invert</h3>
+        <p>Encode the video with the model's VAE, \(\mathbf{Z}_1 = \mathcal{E}(X)\), and integrate backwards to noise. The exact inverse of an Euler step is implicit, so we evaluate the velocity at the known endpoint instead:</p>
+        <div class="eq">\[\mathbf{Z}_{t_k} = \mathbf{Z}_{t_{k+1}} - \Delta t_k \, v_\theta(\mathbf{Z}_{t_{k+1}},\, t_{k+1})\]</div>
+        <p class="step-note">One network evaluation per step, the same cost as generation. Its deviation from the exact inverse shrinks linearly with step size, and the recovered noise regenerates the original video up to minor artifacts.</p>
+      </li>
+      <li class="step">
+        <span class="step-num">2</span>
+        <h3>Probe</h3>
+        <p>Along the 100-step trajectory, record every transformer block's output at 11 noise levels, mean-pool it over tokens, and fit one linear classifier per block and noise level:</p>
+        <div class="eq">\[\hat{y} = \operatorname{softmax}\!\big(W_{b,t}\,\bar{\mathbf{h}}_{b,t} + \mathbf{c}_{b,t}\big)\]</div>
+        <p class="step-note">Held-out accuracy on a 60/40 split, averaged over five seeds. Each clip is classified on its own.</p>
+      </li>
+      <li class="step">
+        <span class="step-num">3</span>
+        <h3>Intervene</h3>
+        <p>During generation, corrupt one block's output at every denoising step, re-invert the result, and score it with the probe's surprise \(\psi = \text{logit}_\text{implausible} - \text{logit}_\text{plausible}\):</p>
+        <div class="eq">\[\tilde{\mathbf{h}} = \mathbf{h} + \alpha\, \boldsymbol{\sigma}(\mathbf{h}) \odot \boldsymbol{\epsilon}, \qquad \Delta_b = \bar{\psi}(V_b) - \bar{\psi}(V_\text{base})\]</div>
+        <p class="step-note">A positive \(\Delta_b\) means corrupting block \(b\) makes the generated video look less plausible to the probe.</p>
+      </li>
+    </ol>
+
+    <div class="models">
+      <div class="models-group">
+        <span class="models-label">Diffusion backbones</span>
+        <span class="pill">WAN-1.3B</span><span class="pill">CogVideoX-2B</span><span class="pill">LTX-2B</span>
+      </div>
+      <div class="models-group">
+        <span class="models-label">Baselines</span>
+        <span class="pill pill-muted">V-JEPA 2 ViT-L / ViT-g</span><span class="pill pill-muted">VideoMAE-Large / Giant</span><span class="pill pill-muted">VAE latents</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────────────────── Results ───────────────────────── -->
+<section class="section section-alt" id="results">
+  <div class="container">
+    <div class="section-head narrow-text">
+      <p class="eyebrow">Results</p>
+      <h2>What the hidden states know</h2>
+    </div>
+
+    <!-- Key result -->
+    <article class="finding finding-key">
+      <div class="finding-text narrow-text">
+        <p class="finding-num">Key result</p>
+        <h3>Intuitive physics is not unique to V-JEPA-style encoders: video diffusion models have it too</h3>
+        <p>The evidence so far for intuitive physics in video models comes from self-supervised encoders such as V-JEPA, trained to predict masked parts of a video in representation space. Video diffusion models are trained for something else entirely: generating video. Yet linear probes on their hidden states separate plausible from implausible clips as well as, and often better than, V-JEPA&nbsp;2 and VideoMAE, including their largest ViT-g and Giant versions.</p>
+        <p>On IntPhys, all three diffusion models score above every encoder; on InfLevel, the two families are on par. Physical structure is not the product of one training objective. It also emerges from learning to generate.</p>
+      </div>
+      <figure class="figure figure-switch">
+        <div class="tabs tabs-sm" role="tablist" aria-label="Accuracy views">
+          <button class="tab" role="tab" id="figtab-bench" aria-controls="figpanel-bench" aria-selected="true">By benchmark</button>
+          <button class="tab" role="tab" id="figtab-cat" aria-controls="figpanel-cat" aria-selected="false" tabindex="-1">By category</button>
+          <button class="tab" role="tab" id="figtab-pair" aria-controls="figpanel-pair" aria-selected="false" tabindex="-1">Pair-wise</button>
+        </div>
+        <div class="fig-panel" role="tabpanel" id="figpanel-bench" aria-labelledby="figtab-bench">
+          <a class="figure-frame" href="static/images/fig2_combined_pervideo.png">
+            <img src="static/images/fig2_combined_pervideo.png" width="2200" height="854" loading="lazy" alt="Bar charts of per-video accuracy for seven models. On IntPhys, WAN-1.3B (about 0.90), LTX-2B (0.83) and CogVideoX-2B (0.77) are all above V-JEPA 2 ViT-L, VideoMAE-Large, V-JEPA 2 ViT-g and VideoMAE-Giant (0.63 to 0.71). On InfLevel, all seven models fall between about 0.66 and 0.72.">
+          </a>
+          <figcaption><b>Per-video accuracy</b> on IntPhys and InfLevel: each clip is classified on its own. Shaded bars are the diffusion models, probed at the midpoint of the reverse trajectory (\(t = 0.5\)). Best block per seed; mean and standard error over five seeds.</figcaption>
+        </div>
+        <div class="fig-panel" role="tabpanel" id="figpanel-cat" aria-labelledby="figtab-cat" hidden>
+          <a class="figure-frame" href="static/images/fig2_percategory.png">
+            <img src="static/images/fig2_percategory.png" width="2200" height="719" loading="lazy" alt="Per-video accuracy for each category: IntPhys permanence, shape constancy and continuity, where diffusion models lead; InfLevel continuity, gravity and solidity, where all models are close; and the average over categories, where all three diffusion models lie above all four encoders. VAE latents stay near chance.">
+          </a>
+          <figcaption><b>Per-video accuracy by category</b>, with the average over all six categories on the right. The VAE latents, probed before any transformer computation, stay near chance.</figcaption>
+        </div>
+        <div class="fig-panel" role="tabpanel" id="figpanel-pair" aria-labelledby="figtab-pair" hidden>
+          <a class="figure-frame" href="static/images/fig3_pairwise_percategory.png">
+            <img src="static/images/fig3_pairwise_percategory.png" width="2200" height="719" loading="lazy" alt="Pair-wise accuracy for each category and on average. IntPhys and InfLevel continuity are near ceiling for most models; on the average, diffusion models score about 0.86 to 0.88, on par with V-JEPA 2 and VideoMAE-Giant.">
+          </a>
+          <figcaption><b>Pair-wise accuracy</b> on the protocol of Garrido et al. (2025): shown a matched pair, pick the implausible one. On this easier task, diffusion models remain on par with or above the encoders.</figcaption>
+        </div>
+      </figure>
+
+      <aside class="callout callout-wide">
+        <h4>The signal is not in the input</h4>
+        <p>Probing the VAE latents directly, before any transformer computation, stays close to chance, and under t-SNE plausible and implausible clips are intermixed everywhere. V-JEPA's physical signal comes from an embedding space trained to predict. Here, nothing in the input or the objective asks for it: the structure is <em>built by the denoiser</em> while it transports noise to video.</p>
+      </aside>
+    </article>
+
+    <!-- Where it emerges -->
+    <article class="finding">
+      <div class="finding-text narrow-text">
+        <p class="finding-num">Where it emerges</p>
+        <h3>Physics emerges at intermediate depth, across the whole trajectory</h3>
+        <p>Probing every block at every noise level, the best block scores above 76% at every noise level except the clean endpoint, for all three models. WAN-1.3B's richest block reaches <strong>88.9%</strong>. The signal is localized in depth, not in time: the best blocks cluster in the middle third of the network, the same intermediate-depth emergence reported for V-JEPA.</p>
+      </div>
+      <figure class="figure">
+        <a class="figure-frame" href="static/images/noiswise_blockwise_plausibility.png">
+          <img src="static/images/noiswise_blockwise_plausibility.png" width="2200" height="445" loading="lazy" alt="Heatmaps of per-video accuracy over transformer block (x-axis) and noise level (y-axis) for WAN-1.3B, CogVideoX-2B and LTX-2B, with stars marking the best block per noise level; best values 88.9%, 79.2% and 76.4%. A fourth panel plots per-block accuracy for V-JEPA 2 and VideoMAE-Large, peaking in middle blocks.">
+        </a>
+        <figcaption><b>Where the signal lives.</b> Per-video accuracy for every transformer block (x-axis) and noise level along the reverse trajectory (y-axis); &#9734; marks the best block at each noise level. Right: per-block accuracy of the representation encoders on the same scale.</figcaption>
+      </figure>
+    </article>
+
+    <!-- What drives it -->
+    <article class="finding">
+      <div class="finding-text narrow-text">
+        <p class="finding-num">What drives it</p>
+        <h3>Early blocks inject the physics; middle blocks expose it</h3>
+        <p>Corrupting one block at a time while generating plausible IntPhys scenes shows which blocks the probe-assessed plausibility depends on. The effect is spread across depth but structured: early blocks dominate for WAN-1.3B and CogVideoX-2B, while LTX-2B is bimodal, with early and late blocks both sensitive. The most <em>decodable</em> blocks are not the most <em>causal</em> ones. Physical structure appears to be set up early and propagated through the network, becoming linearly readable only at intermediate depth.</p>
+      </div>
+      <figure class="figure">
+        <a class="figure-frame" href="static/images/intervention_intphys.png">
+          <img src="static/images/intervention_intphys.png" width="2200" height="597" loading="lazy" alt="Bar charts of mean probe-surprise shift per intervened block for WAN-1.3B, CogVideoX-2B and LTX-2B. The top eight blocks are colored: blocks 3 to 7 and a few late blocks for WAN, mostly blocks 0 to 8 for CogVideoX, and early blocks plus 25 to 27 for LTX.">
+        </a>
+        <figcaption><b>Block interventions.</b> Mean probe-surprise shift \(\Delta_b\) when block \(b\) is corrupted (\(\alpha = 0.5\)), scored with the probe at 50% noise. Colored bars are each model's eight most sensitive blocks.</figcaption>
+      </figure>
+    </article>
+
+    <!-- Beyond plausibility -->
+    <article class="finding">
+      <div class="finding-text narrow-text">
+        <p class="finding-num">Beyond plausibility</p>
+        <h3>Beyond plausibility: the initial conditions are in there too</h3>
+        <p>On PhyWorld parabolas, a linear regressor on a single block recovers the ball's initial position with <strong>R&sup2; = 1.00</strong> for every model, and its initial velocity with R&sup2; between <strong>0.88</strong> (WAN-1.3B) and <strong>0.99</strong>, on par with V-JEPA&nbsp;2 and VideoMAE-Large. The hidden states carry not just <em>that</em> a trajectory obeys gravity, but the specific numbers that generated it. Neither is supervised during diffusion training.</p>
+      </div>
+      <figure class="figure">
+        <a class="figure-frame" href="static/images/beyond_plausibility.png">
+          <img src="static/images/beyond_plausibility.png" width="2200" height="929" loading="lazy" alt="Scatter plots of predicted versus true initial position (top row) and initial velocity (bottom row) for five models. Points lie on the diagonal; initial position R squared is 1.00 for all, initial velocity R squared is 0.88 for WAN-1.3B and 0.99 to 1.00 for the others.">
+        </a>
+        <figcaption><b>Regressing physical parameters.</b> Predicted vs. true initial position \(x_0\) (top) and initial velocity \(v_0\) (bottom), using each model's best single block.</figcaption>
+      </figure>
+    </article>
+
+    <!-- Model capacity -->
+    <article class="finding">
+      <div class="split split-text">
+        <div class="finding-text">
+          <p class="finding-num">Model capacity</p>
+          <h3>Narrower transformers give a cleaner readout</h3>
+          <p>Best per-video accuracy falls as the DiT's hidden width grows, from 1536 (WAN) to 1920 (CogVideoX) to 2048 (LTX). The smallest and most compressed model reads out physics best.</p>
+          <p>One reading is capacity. A narrow model must spend its width on the coarse spatiotemporal structure needed for coherent denoising, while a wide one also spends it on texture, diluting the physical signal. The same trade-off fits the regression result above, where WAN-1.3B is the weakest at the fine-grained velocity. We treat the trend as suggestive: the three models differ in more than width.</p>
+        </div>
+        <figure class="figure figure-small">
+          <a class="figure-frame" href="static/images/compression_representation.png">
+            <img src="static/images/compression_representation.png" width="1200" height="821" loading="lazy" alt="Bubble chart of best per-video accuracy against hidden dimension: WAN-1.3B at 1536 near 0.91, CogVideoX-2B at 1920 near 0.79, LTX-2B at 2048 near 0.76, with a downward trend line.">
+          </a>
+          <figcaption><b>Accuracy vs. width.</b> Best-block per-video accuracy against DiT hidden dimension; bubble size shows parameter count.</figcaption>
+        </figure>
+      </div>
+    </article>
+
+    <!-- The trajectory matters -->
+    <article class="finding">
+      <div class="finding-text narrow-text">
+        <p class="finding-num">The trajectory matters</p>
+        <h3>Physics lives in the flow, not at its endpoints</h3>
+        <p>Inverting with 20 steps instead of 100 still recovers noise that regenerates a faithful video, yet probe accuracy collapses from <strong>0.82</strong> to <strong>0.57</strong>, close to chance. A more accurate integrator at the same 20 steps recovers part of it. Decodability tracks how closely the discrete path follows the model's continuous ODE: a coarse trajectory lands in the right place, but through states the model would never visit.</p>
+      </div>
+      <div class="split split-even">
+        <figure class="figure figure-small">
+          <a class="figure-frame" href="static/images/ablation.png">
+            <img src="static/images/ablation.png" width="1200" height="1006" loading="lazy" alt="Line chart of per-video accuracy against total inversion steps for WAN-1.3B: 0.57 at 20 steps, 0.76 at 40, 0.81 at 60, 0.82 at 80 and 100. Insets show that the 20-step and 100-step reconstructions look alike.">
+          </a>
+          <figcaption><b>Reconstruction succeeds where decoding fails.</b> Both the 20-step and 100-step inversions reconstruct the video; only the finer one preserves the physical signal.</figcaption>
+        </figure>
+        <figure class="figure figure-small">
+          <a class="figure-frame" href="static/images/figure_integrator_ablation.png">
+            <img src="static/images/figure_integrator_ablation.png" width="1200" height="869" loading="lazy" alt="Bar chart comparing Euler and Heun integrators at 20 steps across permanence, shape constancy and continuity; mean accuracy rises from 0.57 with Euler to 0.62 with Heun.">
+          </a>
+          <figcaption><b>Better integration, better physics.</b> At 20 steps, Heun lifts mean accuracy from 0.57 to 0.62 over Euler.</figcaption>
+        </figure>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- ───────────────────────── BibTeX ───────────────────────── -->
+<section class="section" id="bibtex">
+  <div class="container narrow">
+    <div class="bib-head">
+      <h2>BibTeX</h2>
+      <button class="copy" type="button" data-copy="#bibtex-code">Copy</button>
+    </div>
+    <pre class="bib"><code id="bibtex-code">@inproceedings{esmati2026invisible,
+  title     = {The Invisible Hand of Physics: When Video Diffusion Models Know More Than They Show},
+  author    = {Esmati, Parsa and Nath, Somjit and Hofmann, Katja and Nowrouzezahrai, Derek and Kahou, Samira Ebrahimi and Mirmehdi, Majid},
+  booktitle = {Advances in Neural Information Processing Systems},
+  year      = {2026},
+  eprint    = {2606.05328},
+  archivePrefix = {arXiv}
+}</code></pre>
+
+    <h2 class="ack-title">Acknowledgements</h2>
+    <p class="ack">This work was supported by the UK Engineering and Physical Sciences Research Council (EPSRC) under grant EP/W524414/1. The authors acknowledge the use of resources provided by the Isambard-AI National AI Research Resource (AIRR). Isambard-AI is operated by the University of Bristol and is funded by the UK Government's Department for Science, Innovation and Technology (DSIT) via UK Research and Innovation, and the Science and Technology Facilities Council [ST/AIRR/I-A-I/1023].</p>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <div class="container narrow">
+    <p>Example clips are from <a href="https://intphys.cognitive-ml.fr/">IntPhys</a> (Riochet et al., 2018), <a href="https://github.com/allenai/inflevel">InfLevel</a> (Weihs et al., 2022) and <a href="https://github.com/phyworld/phyworld">PhyWorld</a> (Kang et al., 2025), shown for illustration under their respective licenses.</p>
+  </div>
+</footer>
+
+</body>
+</html>

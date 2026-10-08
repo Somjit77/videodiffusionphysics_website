@@ -1,0 +1,5 @@
+# The repository ignores media files globally; the project page needs its own.
+!*.png
+!*.jpg
+!*.svg
+!*.mp4
